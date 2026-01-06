@@ -16,13 +16,13 @@ from skimage.feature import peak_local_max
 def init_context(context):
     context.logger.info("Init context...  0%")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    sam2_checkpoint = "/opt/nuclio/sam2/sam2.1_hiera_large.pt"
-    model_cfg = "configs/sam2.1/sam2.1_hiera_l.yaml"
+    sam2_checkpoint = "/opt/nuclio/sam2/sam2.1_hiera_tiny.pt"
+    model_cfg = "configs/sam2.1/sam2.1_hiera_t.yaml"
     sam2_model = build_sam2(model_cfg, sam2_checkpoint, device=device)
-    #quantized_model = torch.quantization.quantize_dynamic(
-        #sam2_model, {torch.nn.Linear}, dtype=torch.qint8
-    #)
-    predictor = SAM2ImagePredictor(sam2_model)
+    quantized_model = torch.quantization.quantize_dynamic(
+        sam2_model, {torch.nn.Linear}, dtype=torch.qint8
+    )
+    predictor = SAM2ImagePredictor(quantized_model)
     context.user_data.sam2 = predictor
     model = YOLO("/opt/nuclio/sam2/yolo.pt")
     context.user_data.yolo = model
@@ -39,20 +39,23 @@ def check_green(image,min_green = np.array([35,50,50]),max_green = np.array([70,
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((5,5), np.uint8))
     return mask
 
-def find_leaf_points(mask,min_area = 300):
+def find_leaf_points(mask,min_area = 300,max_area = 10000):
     points = []
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+    # Co ảnh
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11))
     erosion = cv2.erode(mask,kernel,iterations=1)
+
     # Tìm từng vùng connected component
     num_labels, labels,stats,centroids = cv2.connectedComponentsWithStats(erosion, connectivity=8)
     for i in range(1,num_labels) :
         _,_,_,_,area = stats[i]
         if area < min_area:
             erosion[labels == i] = 0
-        if area > min_area and area < 10000 :
+        if area > min_area and area < max_area :
             points.append(centroids[i])
             erosion[labels == i] = 0
 
+    # Tạo bản đồ khoảng cách và tìm đỉnh
     dist = cv2.distanceTransform(erosion, cv2.DIST_L2, 5)
     coords = peak_local_max(dist, min_distance=30,threshold_abs=10)
     coords = np.array([(int(x), int(y)) for (y, x) in coords])
@@ -67,6 +70,7 @@ def find_crop(image,results) :
     box_results = []
     crops = []
     positions = []
+
     for i, box in enumerate(boxes):
         x1, y1, x2, y2 = box
         box_results.append(box)
@@ -94,6 +98,7 @@ def sam2_inputs(points, min_dist=100):
     input_coords = []
     input_labels = []
 
+    # Lấy điểm gần nhất > min dist làm negative point
     for i in range(num_points):
         point = points[i]
 
@@ -123,6 +128,7 @@ def sam2_inputs(points, min_dist=100):
 
 def check_mask(green, s_mask, min_green_ratio=0.5):
     s_mask = (s_mask > 0).astype(np.uint8) * 255
+
     # Vùng xanh của mask
     overlap = cv2.bitwise_and(green, green, mask=s_mask)
 
@@ -157,7 +163,6 @@ def handler(context, event):
     crops,positions = find_crop(image,crop_results)
 
     n = len(crops)
-    print("n",n)
     results = []
 
     for i in range(n) :

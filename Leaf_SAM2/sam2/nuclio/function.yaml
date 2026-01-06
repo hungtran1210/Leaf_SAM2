@@ -1,21 +1,16 @@
-# Copyright (C) CVAT.ai Corporation
-#
-# SPDX-License-Identifier: MIT
-
 metadata:
-  name: pth-facebookresearch-sam2-hiera-large
+  name: pth-facebookresearch-sam2-hiera-tiny
   namespace: cvat
   annotations:
-    name: Segment Anything 2
+    name: Segment Anything 2.1
     type: detector
     spec: |
       [
-        { "id": 1, "name": "Spinacia", "type": "polygon" }
+        { "id": 0, "name": "Spinacia", "type": "polygon" }
       ]
 
-
 spec:
-  description: segmentation with Segment-Anything 2
+  description: segmentation with Segment-Anything 2.1
   runtime: 'python:3.10'
   handler: main:handler
   eventTimeout: 300s
@@ -24,35 +19,8 @@ spec:
       value: /opt/nuclio/sam2
 
   build:
-    image: cvat.pth.facebookresearch.sam2.hiera_large
-    baseImage: ubuntu:22.04
-
-    directives:
-      preCopy:
-      # disable interactive frontend
-        - kind: ENV
-          value: DEBIAN_FRONTEND=noninteractive
-      # set workdir
-        - kind: WORKDIR
-          value: /opt/nuclio/sam2
-      # install basic deps
-        - kind: RUN
-          value: apt-get update && apt-get -y install curl git python3 python3-pip ffmpeg libsm6 libxext6
-      # install sam deps
-        - kind: RUN
-          value: pip3 install torch torchvision torchaudio pycocotools matplotlib onnxruntime onnx scikit-image ultralytics gdown
-      # install sam code
-        - kind: RUN
-          value: pip3 install git+https://github.com/facebookresearch/sam2.git
-      # download sam weights
-        - kind: RUN
-          value: curl -O https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt
-      # download
-        - kind: RUN
-          value: gdown https://drive.google.com/uc?id=1kA67UMa5iciix77Gwnm4PwRC2kRjgfYQ -O yolo.pt
-      # map pip3 and python3 to pip and python
-        - kind: RUN
-          value: ln -sf /usr/bin/pip3 /usr/local/bin/pip && ln -sf /usr/bin/python3 /usr/bin/python
+    image: cvat.pth.facebookresearch.sam2.hiera_tiny
+    baseImage: tranhung1210/cvat-sam2-tiny:v2
 
   triggers:
     myHttpTrigger:
@@ -60,7 +28,7 @@ spec:
       kind: 'http'
       workerAvailabilityTimeoutMilliseconds: 10000
       attributes:
-        maxRequestBodySize: 33554432 # 32MB
+        maxRequestBodySize: 33554432
 
   platform:
     attributes:
