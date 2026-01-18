@@ -2,7 +2,7 @@ metadata:
   name: pth-facebookresearch-sam2-hiera-tiny
   namespace: cvat
   annotations:
-    name: Segment Anything 2.1
+    name: Segment Anything 2
     type: detector
     spec: |
       [
@@ -10,7 +10,7 @@ metadata:
       ]
 
 spec:
-  description: segmentation with Segment-Anything 2.1
+  description: segmentation with Segment-Anything 2
   runtime: 'python:3.10'
   handler: main:handler
   eventTimeout: 300s
@@ -20,7 +20,7 @@ spec:
 
   build:
     image: cvat.pth.facebookresearch.sam2.hiera_tiny
-    baseImage: tranhung1210/cvat-sam2-tiny:v2
+    baseImage: tranhung1210/cvat-sam2-tiny:v3
 
   triggers:
     myHttpTrigger:
