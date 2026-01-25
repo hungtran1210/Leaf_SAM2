@@ -20,7 +20,7 @@ spec:
 
   build:
     image: cvat.pth.facebookresearch.sam2.hiera_tiny
-    baseImage: tranhung1210/cvat-sam2-tiny:v3
+    baseImage: tranhung1210/cvat-sam2-tiny:v4
 
   triggers:
     myHttpTrigger:

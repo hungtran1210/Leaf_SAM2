@@ -3,7 +3,7 @@
 ## Quy trình xử lý
 1. **Phát hiện cây** : Dùng Yolo1 phát hiện crop chứa cây rau trong ảnh.
 2. **Phát hiện lá** : Dùng Yolo2 phát hiện box chứa lá cây trong cây rau.
-3. **Phân đoạn** : Lấy box và tâm của box làm prompt cho SAM2 tạo masks
+3. **Phân đoạn** : Tạo ảnh lớn ghép từ các crop bước 1 và chuyển box từ bước 2 sang ảnh mới từ đó tạo prompt cho SAM2 phân đoạn.
 4. **Hậu xủ lý** : Lọc mask hợp lệ, làm sạch và ghép về ảnh gốc
 
 *Yolo1 : mô hình yolo11n phát hiện cây rau trong ảnh
