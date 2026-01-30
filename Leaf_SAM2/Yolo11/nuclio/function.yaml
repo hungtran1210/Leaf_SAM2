@@ -1,34 +1,33 @@
 metadata:
-  name: pth-facebookresearch-sam2-hiera-tiny
+  name: yolo11
   namespace: cvat
   annotations:
-    name: Segment Anything 2
+    name: YOLO11
     type: detector
     spec: |
       [
-        { "id": 0, "name": "Spinacia", "type": "polygon" }
+        { "id": 0, "name": "Spinacia", "type": "rectangle" }
       ]
-
 spec:
-  description: segmentation with Segment-Anything 2
+  description: YOLO11
   runtime: 'python:3.10'
   handler: main:handler
-  eventTimeout: 300s
+  eventTimeout: 30s
   env:
     - name: PYTHONPATH
-      value: /opt/nuclio/sam2
+      value: /opt/nuclio
 
   build:
-    image: cvat.pth.facebookresearch.sam2.hiera_tiny
+    image: cvat.yolov11
     baseImage: tranhung1210/cvat-sam2-tiny:v5
 
   triggers:
     myHttpTrigger:
-      numWorkers: 2
+      numWorkers: 1
       kind: 'http'
       workerAvailabilityTimeoutMilliseconds: 10000
       attributes:
-        maxRequestBodySize: 33554432
+        maxRequestBodySize: 33554432 # 32MB
 
   platform:
     attributes:

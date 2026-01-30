@@ -103,6 +103,8 @@ def clean_mask(masks, scores,greens, thresh=0.5):
     index_t = [i for i, mask in enumerate(masks) if check_mask(greens, mask)]
 
     masks = [masks[i] for i in index_t]
+    if not masks or len(masks) == 0:
+        return [], []
     scores = scores[index_t]
     # sắp xếp  theo scores
     sorted_indices = np.argsort(scores)[::-1]
@@ -132,17 +134,17 @@ def new_image(image_list, yolo_results_list):
     num_imgs = len(image_list)
     if num_imgs == 0: return None, [], []
 
-    # Thiết lập ảnh lớn 
+    # Thiết lập ảnh lớn
     row = int(math.ceil(math.sqrt(num_imgs)))
-    
+
     image_row = []
     for i in range(0, num_imgs, row):
         image_row.append(range(i, min(i + row, num_imgs)))
 
-    row_hw = [] 
+    row_hw = []
     max_w = 0
     total_h = 0
-    offsets = {} 
+    offsets = {}
 
     for images in image_row:
         current_imgs = [image_list[i] for i in images]
@@ -154,7 +156,7 @@ def new_image(image_list, yolo_results_list):
 
     new_img = np.zeros((total_h, max_w, 3), dtype=np.uint8)
 
-    # Dán ảnh 
+    # Dán ảnh
     current_y = 0
     for r, images in enumerate(image_row):
         _, row_h = row_hw[r]
@@ -169,7 +171,7 @@ def new_image(image_list, yolo_results_list):
 
     # chuyển box,lưu vị trí crop
     data = []
-    global_boxes = [] 
+    global_boxes = []
 
     for i in range(num_imgs):
         x1, y1, x2, y2 = offsets[i]
@@ -213,6 +215,24 @@ def process_mask(mask,scores,num_box_crop,data,h,w,positions,greens) :
         current += num_box_crop[i]
     return masks_all, scores_all
 
+def to_cvat_mask(mask):
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return None
+    
+    contour = max(contours, key=cv2.contourArea)
+    xtl, ytl, w, h = cv2.boundingRect(contour)
+    xbr = xtl + w - 1
+    ybr = ytl + h - 1
+
+    polygon = contour.flatten().tolist()
+
+    roi = mask[ytl : ybr + 1, xtl : xbr + 1]
+    flattened = roi.flat[:].tolist()
+    flattened.extend([xtl, ytl, xbr, ybr])
+    
+    return flattened, polygon
+
 def handler(context, event):
     context.logger.info("call handler")
     data = event.body
@@ -248,21 +268,15 @@ def handler(context, event):
     )
 
     masks_all,scores_all = process_mask(masks,scores,num_box,data,h,w,positions,greens)
-    print(len(masks_all))
-    print(len(scores_all))
 
     for mask, score in zip(masks_all, scores_all):
-        # Tìm contour (polygon)
-        contours, _ = cv2.findContours(mask,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        contours = [cv2.approxPolyDP(contour, epsilon=0.1, closed=True) for contour in contours]
-        if len(contours) == 0:
-            continue
-        contour = max(contours, key=cv2.contourArea)
-        polygon = contour.flatten().tolist()
+        cvat_mask, polygon = to_cvat_mask(mask)
+        if cvat_mask == None : continue
         results.append({
             "confidence": str(float(score)),
             "label": "Spinacia",
             "points": polygon,
-            "type": "polygon",
+            "mask":cvat_mask,
+            "type": "mask",
             })
     return context.Response(body=json.dumps(results), headers={},content_type='application/json', status_code=200)
