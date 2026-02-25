@@ -1,9 +1,9 @@
 # Leaf_SAM2
 
 ## Quy trình xử lý
-1. **Phát hiện cây** : Dùng Yolo1 phát hiện crop chứa cây rau trong ảnh.
+1. **Phát hiện cây** : Dùng Yolo1 phát hiện crop chứa cây rau trong ảnh. Nếu ảnh lớn sẽ chia ảnh thành nhiều ảnh nhỏ. 
 2. **Phát hiện lá** : Dùng Yolo2 phát hiện box chứa lá cây trong cây rau.
-3. **Phân đoạn** : Tạo ảnh lớn ghép từ các crop bước 1 và chuyển box từ bước 2 sang ảnh mới từ đó tạo prompt cho SAM2 phân đoạn.
+3. **Phân đoạn** : Tạo ảnh lớn(4 cây) ghép từ các crop bước 1 và chuyển box từ bước 2 sang ảnh mới, tính tâm box và nhãn của tâm từ đó tạo prompt cho SAM2 phân đoạn.
 4. **Hậu xủ lý** : Lọc mask hợp lệ, làm sạch và ghép về ảnh gốc
 
 *Yolo1 : mô hình yolo11n phát hiện cây rau trong ảnh
@@ -23,14 +23,17 @@
 
     Copy [sam2/nuclio](https://github.com/hungtran1210/Leaf_SAM2/tree/main/Leaf_SAM2/sam2/nuclio) vào phần [serverless](https://docs.cvat.ai/docs/getting_started) của CVAT
 
-    Chạy model bằng lệnh :
-
+    Chạy cvat
     ```bash
     docker compose -f docker-compose.yml -f components/serverless/docker-compose.serverless.yml up -d
     ```
 
+    Chạy model bằng lệnh :
     ```bash
     ./serverless/deploy_cpu.sh serverless/sam2
+    ```
+    ```bash
+    ./serverless/deploy_gpu.sh serverless/sam2
     ```
 
 ## Notebooks demo
@@ -44,3 +47,4 @@
 ## Hình ảnh minh họa 
 ![alt text](image1.png)
 ![alt text](image2.png)
+![alt text](image3.png)
