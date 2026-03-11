@@ -1,16 +1,16 @@
 metadata:
-  name: pth-facebookresearch-sam2-hiera-tiny
+  name: sam2-hiera-tiny
   namespace: cvat
   annotations:
-    name: Segment Anything 2
+    name: Segment Anything 2.1
     type: detector
     spec: |
       [
-        { "id": 0, "name": "Spinacia", "type": "polygon" }
+        { "id": 0, "name": "Spinacia", "type": "mask" }
       ]
 
 spec:
-  description: segmentation with Segment-Anything 2
+  description: segmentation with Segment-Anything 2.1
   runtime: 'python:3.10'
   handler: main:handler
   eventTimeout: 300s
@@ -19,12 +19,34 @@ spec:
       value: /opt/nuclio/sam2
 
   build:
-    image: cvat.pth.facebookresearch.sam2.hiera_tiny
-    baseImage: tranhung1210/cvat-sam2-tiny:v5
+    image: cvat.sam2.hiera_tiny
+    baseImage: python:3.10-slim
+
+    directives:
+      preCopy:
+        - kind: ENV
+          value: DEBIAN_FRONTEND=noninteractive
+        - kind: WORKDIR
+          value: /opt/nuclio/sam2
+        
+        - kind: RUN
+          value: |-
+            apt-get update && apt-get -y install --no-install-recommends curl git libsm6 libxext6 && rm -rf /var/lib/apt/lists/* && \
+            pip3 install --no-cache-dir scipy pyyaml scikit-image opencv-python-headless numpy && \
+            pip3 install --no-cache-dir onnxruntime && rm -rf /root/.cache/pip
+
+        - kind: RUN
+          value: |-
+            pip3 install gdown && \
+            gdown https://drive.google.com/uc?id=1NaMcxktklbodwD9HZqnX90J5eTuZKLJC -O yolo1.onnx && \
+            gdown https://drive.google.com/uc?id=1nEaFocZgtMq44RT8dpCvgLT7iqtSHKPD -O yolo2.onnx && \
+            gdown https://drive.google.com/uc?id=1rJ-ySwAZC76kVLdBa5XJ4hd1_LufH9Nm -O sam2.1_hiera_tiny_encoder.onnx && \
+            gdown https://drive.google.com/uc?id=1YJLAUhWOXbk4YNBe3tYNLxpRgC5LEI4x -O sam2.1_hiera_tiny_decoder.onnx && \
+            pip3 uninstall -y gdown && rm -rf /root/.cache/pip
 
   triggers:
     myHttpTrigger:
-      numWorkers: 2
+      numWorkers: 1
       kind: 'http'
       workerAvailabilityTimeoutMilliseconds: 10000
       attributes:

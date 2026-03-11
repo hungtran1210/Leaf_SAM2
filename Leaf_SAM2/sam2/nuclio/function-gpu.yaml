@@ -1,5 +1,5 @@
 metadata:
-  name: pth-sam2-hiera-tiny-gpu
+  name: sam2-hiera-tiny-gpu
   namespace: cvat
   annotations:
     name: Segment Anything 2.1
@@ -10,7 +10,7 @@ metadata:
       ]
 
 spec:
-  description: segmentation with Segment-Anything 2.1:gpu
+  description: segmentation with Segment-Anything 2.1 :gpu
   runtime: 'python:3.10'
   handler: main:handler
   eventTimeout: 300s
@@ -19,7 +19,7 @@ spec:
       value: /opt/nuclio/sam2
 
   build:
-    image: cvat.pth.sam2.hiera_tiny:gpu
+    image: cvat.sam2.hiera_tiny:gpu
     baseImage: python:3.10-slim
 
     directives:
@@ -34,24 +34,25 @@ spec:
           value: DEBIAN_FRONTEND=noninteractive
         - kind: WORKDIR
           value: /opt/nuclio/sam2
+        
         - kind: RUN
           value: |-
             apt-get update && apt-get -y install --no-install-recommends curl git libsm6 libxext6 && rm -rf /var/lib/apt/lists/* && \
-            pip3 install --no-cache-dir scipy pyyaml hydra-core iopath scikit-image opencv-python-headless && \
-            pip3 install --no-cache-dir torch torchvision && \
-            pip3 install --no-cache-dir ultralytics --no-deps && \
-            pip3 install --no-cache-dir git+https://github.com/facebookresearch/sam2.git --no-deps && rm -rf /root/.cache/pip
+            pip3 install --no-cache-dir scipy pyyaml scikit-image opencv-python-headless numpy && \
+            pip3 install --no-cache-dir onnxruntime-gpu && rm -rf /root/.cache/pip
 
         - kind: RUN
           value: |-
-            curl -L -o sam2.1_hiera_tiny.pt https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt && \
-            pip3 install gdown && gdown https://drive.google.com/uc?id=1S8U3RwDKYaD9aj1NwcwxRQnwcreMi5fc -O yolo1.pt && \
-            gdown https://drive.google.com/uc?id=16NmthLiquKnm-LVlx8exPbHexwTadOUf -O yolo2.pt && \
+            pip3 install gdown && \
+            gdown https://drive.google.com/uc?id=1NaMcxktklbodwD9HZqnX90J5eTuZKLJC -O yolo1.onnx && \
+            gdown https://drive.google.com/uc?id=1nEaFocZgtMq44RT8dpCvgLT7iqtSHKPD -O yolo2.onnx && \
+            gdown https://drive.google.com/uc?id=1rJ-ySwAZC76kVLdBa5XJ4hd1_LufH9Nm -O sam2.1_hiera_tiny_encoder.onnx && \
+            gdown https://drive.google.com/uc?id=1YJLAUhWOXbk4YNBe3tYNLxpRgC5LEI4x -O sam2.1_hiera_tiny_decoder.onnx && \
             pip3 uninstall -y gdown && rm -rf /root/.cache/pip
 
   triggers:
     myHttpTrigger:
-      numWorkers: 2
+      numWorkers: 1
       kind: 'http'
       workerAvailabilityTimeoutMilliseconds: 10000
       attributes:

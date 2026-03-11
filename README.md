@@ -3,7 +3,7 @@
 ## Quy trình xử lý
 1. **Phát hiện cây** : Dùng Yolo1 phát hiện crop chứa cây rau trong ảnh. Nếu ảnh lớn sẽ chia ảnh thành nhiều ảnh nhỏ. 
 2. **Phát hiện lá** : Dùng Yolo2 phát hiện box chứa lá cây trong cây rau.
-3. **Phân đoạn** : Tạo ảnh lớn(4 cây) ghép từ các crop bước 1 và chuyển box từ bước 2 sang ảnh mới, tính tâm box và nhãn của tâm từ đó tạo prompt cho SAM2 phân đoạn.
+3. **Phân đoạn** : Tạo prompt cho SAM2 phân đoạn từ box của yolo2
 4. **Hậu xủ lý** : Lọc mask hợp lệ, làm sạch và ghép về ảnh gốc
 
 *Yolo1 : mô hình yolo11n phát hiện cây rau trong ảnh
@@ -38,11 +38,11 @@
 
 ## Notebooks demo
 
-1. Minh họa phương pháp : [Leaf](https://github.com/hungtran1210/Leaf_SAM2/blob/main/Leaf_SAM2/Leaf.ipynb)
+1. Minh họa phương pháp : [Leaf](https://github.com/hungtran1210/Leaf_SAM2/blob/main/Leaf_SAM2/notebook/leaf_onnx.ipynb)
 
-2. Train yolo : [Yolo11](https://github.com/hungtran1210/Leaf_SAM2/blob/main/Leaf_SAM2/Yolo11.ipynb), [Data](https://drive.google.com/drive/folders/1B_m5oU3yYRJjc7jnCyMX2h_7MrT6lsIv?usp=drive_link), [Data_leaf](https://drive.google.com/drive/folders/1H9VW21gfvMESuRjuQ8j7Z4iDanRXGBPR?usp=drive_link) 
+2. Train yolo : [Yolo11](https://github.com/hungtran1210/Leaf_SAM2/blob/main/Leaf_SAM2/notebook/Yolo11.ipynb), [Data_crop](https://drive.google.com/drive/folders/1e1oyn57vWUYVmAbeYK6VWvUvFHzDKQ1o?usp=sharing), [Data_leaf](https://drive.google.com/drive/folders/1fGZf1mAJlIW7NxIgkqHs6_R7SPrUFu7Y?usp=drive_link) 
 
-3. Kết quả : [Test](https://github.com/hungtran1210/Leaf_SAM2/blob/main/Leaf_SAM2/test.ipynb)
+3. Kết quả : [Test](https://github.com/hungtran1210/Leaf_SAM2/blob/main/Leaf_SAM2/notebook/test.ipynb)
 
 ## Hình ảnh minh họa 
 ![alt text](image1.png)
